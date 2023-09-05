@@ -1,0 +1,8 @@
+Training:
+python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7-0905
+
+Re-parameterization:
+    On video:
+        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source farm_images
+    On image:
+        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source my_videos/farm.mp4
