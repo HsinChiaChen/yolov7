@@ -1,8 +1,36 @@
 Training:
 python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7-0905
+python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7-0906
 
 Re-parameterization:
     On video:
         python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source farm_images
     On image:
-        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source my_videos/farm.mp4
+        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source my_videos/farm1.mp4
+
+
+detext : best --> yolov7-090503
+    exp
+    exp1
+    exp2
+        yolov7-090503 image
+    exp3
+        yolov7-090503 video
+    exp7
+        yolov7-090602 image
+    exp8
+        yolov7-090602 video
+    exp9
+        yolov7-090603 image
+    exp10
+        yolov7-090603 video
+    exp12
+        yolov7-090604 image
+    exp13
+        yolov7-090604 video
+    exp14
+        yolov7-090503 video
+    exp15
+        yolov7-090503 video
+
+

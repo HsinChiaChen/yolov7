@@ -10,7 +10,9 @@ val: /home/hcchen/yolov7/images  # 5000 images
 # test: ./coco/test-dev2017.txt  # 20288 of 40670 images, submit to https://competitions.codalab.org/competitions/20794
 
 # number of classes
-nc: 2
+nc: 3
 
 # class names
-names: ['tree', 'person']
+names: ['tree',
+        'trunk', 
+        'person']
