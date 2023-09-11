@@ -5,13 +5,14 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import numpy as np
 from numpy import random
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.plots import plot_one_box
+from utils.plots import plot_one_box, plot_one_box_remove_background, mask
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 
@@ -103,6 +104,10 @@ def detect(save_img=False):
             else:
                 p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
 
+            # Produce an image of the same size as img
+            width, height = im0.shape[1], im0.shape[0]
+            img_mask = np.zeros((height, width), dtype=im0.dtype)
+
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
@@ -126,7 +131,10 @@ def detect(save_img=False):
 
                     if save_img or view_img:  # Add bbox to image
                         label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
+                        # plot_one_box_remove_background(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                # cv2.imshow("mask", img_mask)
+                im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
