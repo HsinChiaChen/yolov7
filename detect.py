@@ -12,7 +12,7 @@ from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.plots import plot_one_box, plot_one_box_remove_background, mask
+from utils.my_plots import plot_one_box, plot_one_box_remove_background, mask
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 
@@ -133,7 +133,6 @@ def detect(save_img=False):
                         label = f'{names[int(cls)]} {conf:.2f}'
                         # plot_one_box_remove_background(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                         mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                # cv2.imshow("mask", img_mask)
                 im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
 
             # Print time (inference + NMS)

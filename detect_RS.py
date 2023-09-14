@@ -11,7 +11,7 @@ from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.plots import plot_one_box
+from utils.my_plots import plot_one_box, mask
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 import pyrealsense2 as rs
@@ -127,6 +127,10 @@ def detect(save_img=False):
         # Process detections
         for i, det in enumerate(pred):  # detections per image
 
+            # Produce an image of the same size as img
+            width, height = im0.shape[1], im0.shape[0]
+            img_mask = np.zeros((height, width), dtype=im0.dtype)
+
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -141,14 +145,17 @@ def detect(save_img=False):
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
                     label = f'{names[c]} {conf:.2f}'
-                    plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
-                    plot_one_box(xyxy, depth_colormap, label=label, color=colors[int(cls)], line_thickness=2)             
+                    # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+                    plot_one_box(xyxy, depth_colormap, label=label, color=colors[int(cls)], line_thickness=2)    
+                    mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                # cv2.imshow("mask", img_mask)
+                im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)         
 
             # Print time (inference + NMS)
             #print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
             # Stream results
             cv2.imshow("Recognition result", im0)
-            cv2.imshow("Recognition result depth",depth_colormap)
+            # cv2.imshow("Recognition result depth",depth_colormap)
             
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -156,7 +163,7 @@ def detect(save_img=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='best.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='yolov7-tiny.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
@@ -180,7 +187,7 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ['best.pt']:
+            for opt.weights in ['yolov7.pt']:
                 detect()
                 strip_optimizer(opt.weights)
         else:
