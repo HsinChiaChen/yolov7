@@ -124,18 +124,68 @@ def mask(x, img_mask, img, color=None, label=None, line_thickness=10):
     img_mask[c1[1]:c2[1], c1[0]:c2[0]] = 255
     # img = cv2.add(img, np.zeros(np.shape(img), dtype=np.uint8), mask=img_mask)
 
-def plot_one_box_remove_background(x, img, color=None, label=None, line_thickness=10):
+def plot_one_box_no_text(x, img, color=None, label=None, line_thickness=10):
     # Plots one bounding box on image img
     tl = line_thickness or round(0.02 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
-    if label:
-        tf = max(tl - 1, 1)  # font thickness
-        t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
-        c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
-        cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+
+def line_store(x, img, label_name, label_conf, right_line, left_line):
+    c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
+    x_posiiton = (int(x[0])+ int(x[2]))/2
+    y_posiiton = int(x[3])
+    width, height = img.shape[1], img.shape[0]
+    r = 0
+    l = 0
+    if label_name == "tree" and label_conf > 0.5:
+        # print("x_posiiton = ", x_posiiton)
+        # print("y_posiiton = ", y_posiiton)
+        if x_posiiton > width/2 : # right
+            # print("right!")
+            while right_line[r][0] > 1:
+                r = r + 1 
+            else:
+                right_line[r] = (x_posiiton, y_posiiton)
+                # right_line[r][0] = x_posiiton
+                # right_line[r][1] = y_posiiton
+        else :
+            # print("left!")
+            while left_line[l][0] > 1:
+                l += 1
+            else:
+                left_line[l] = (x_posiiton, y_posiiton)
+                # left_line[l][0] = x_posiiton
+                # left_line[l][1] = y_posiiton
+    # else:
+    #     print("no detect !")
+    return [right_line, left_line]
+
+def draw_line(img, right_line, left_line):
+
+    left_line = sorted(left_line, key=lambda point: point[1], reverse=True)
+    right_line = sorted(right_line, key=lambda point: point[1], reverse=True)
+    # print(left_line)
+
+    x_right_values = [point[0] for point in right_line]
+    y_right_values = [point[1] for point in right_line]
+    x_left_values = [point[0] for point in left_line]
+    y_left_values = [point[1] for point in left_line]
+
+    # 繪製直線
+    for r in range(len(right_line) - 1):
+        if int(right_line[r+1][0]) != 0 and int(right_line[r+1][1]) != 0: 
+            cv2.line(img,(int(right_line[r][0]), int(right_line[r][1])), (int(right_line[r+1][0]), int(right_line[r+1][1])), (255, 0, 0), 10)
+    for l in range(len(left_line) - 1):
+        if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != 0: 
+            cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
+
+    # point_size = 10
+    # point_color = (0, 0, 255) # BGR
+    # thickness = 4 # 可以为 0 、4、8
+    # for i in range(5):
+    #     if int(right_line[i][0]) != 0 and int(right_line[i][1]) != 0:  
+    #         cv2.circle(img, (int(right_line[i][0]), int(right_line[i][1])), point_size, point_color, thickness)
 
 
 def plot_one_box_PIL(box, img, color=None, label=None, line_thickness=None):
@@ -150,7 +200,6 @@ def plot_one_box_PIL(box, img, color=None, label=None, line_thickness=None):
         draw.rectangle([box[0], box[1] - txt_height + 4, box[0] + txt_width, box[1]], fill=tuple(color))
         draw.text((box[0], box[1] - txt_height + 1), label, fill=(255, 255, 255), font=font)
     return np.asarray(img)
-
 
 def plot_wh_methods():  # from utils.plots import *; plot_wh_methods()
     # Compares the two methods for width-height anchor multiplication
@@ -171,7 +220,6 @@ def plot_wh_methods():  # from utils.plots import *; plot_wh_methods()
     plt.legend()
     fig.savefig('comparison.png', dpi=200)
 
-
 def output_to_target(output):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     targets = []
@@ -179,7 +227,6 @@ def output_to_target(output):
         for *box, conf, cls in o.cpu().numpy():
             targets.append([i, cls, *list(*xyxy2xywh(np.array(box)[None])), conf])
     return np.array(targets)
-
 
 def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max_size=640, max_subplots=16):
     # Plot image grid with labels
@@ -259,7 +306,6 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
         Image.fromarray(mosaic).save(fname)  # PIL save
     return mosaic
 
-
 def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
     # Plot LR simulating training for full epochs
     optimizer, scheduler = copy(optimizer), copy(scheduler)  # do not modify originals
@@ -275,7 +321,6 @@ def plot_lr_scheduler(optimizer, scheduler, epochs=300, save_dir=''):
     plt.ylim(0)
     plt.savefig(Path(save_dir) / 'LR.png', dpi=200)
     plt.close()
-
 
 def plot_test_txt():  # from utils.plots import *; plot_test()
     # Plot test.txt histograms
@@ -293,7 +338,6 @@ def plot_test_txt():  # from utils.plots import *; plot_test()
     ax[1].hist(cy, bins=600)
     plt.savefig('hist1d.png', dpi=200)
 
-
 def plot_targets_txt():  # from utils.plots import *; plot_targets_txt()
     # Plot targets.txt histograms
     x = np.loadtxt('targets.txt', dtype=np.float32).T
@@ -305,7 +349,6 @@ def plot_targets_txt():  # from utils.plots import *; plot_targets_txt()
         ax[i].legend()
         ax[i].set_title(s[i])
     plt.savefig('targets.jpg', dpi=200)
-
 
 def plot_study_txt(path='', x=None):  # from utils.plots import *; plot_study_txt()
     # Plot study.txt generated by test.py
@@ -337,7 +380,6 @@ def plot_study_txt(path='', x=None):  # from utils.plots import *; plot_study_tx
     ax2.set_ylabel('COCO AP val')
     ax2.legend(loc='lower right')
     plt.savefig(str(Path(path).name) + '.png', dpi=300)
-
 
 def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
     # plot dataset labels
@@ -387,7 +429,6 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
         if k == 'wandb' and v:
             v.log({"Labels": [v.Image(str(x), caption=x.name) for x in save_dir.glob('*labels*.jpg')]}, commit=False)
 
-
 def plot_evolution(yaml_file='data/hyp.finetune.yaml'):  # from utils.plots import *; plot_evolution()
     # Plot hyperparameter evolution results in evolve.txt
     with open(yaml_file) as f:
@@ -410,7 +451,6 @@ def plot_evolution(yaml_file='data/hyp.finetune.yaml'):  # from utils.plots impo
         print('%15s: %.3g' % (k, mu))
     plt.savefig('evolve.png', dpi=200)
     print('\nPlot saved as evolve.png')
-
 
 def profile_idetection(start=0, stop=0, labels=(), save_dir=''):
     # Plot iDetection '*.txt' per-image logs. from utils.plots import *; profile_idetection()
@@ -443,7 +483,6 @@ def profile_idetection(start=0, stop=0, labels=(), save_dir=''):
     ax[1].legend()
     plt.savefig(Path(save_dir) / 'idetection_profile.png', dpi=200)
 
-
 def plot_results_overlay(start=0, stop=0):  # from utils.plots import *; plot_results_overlay()
     # Plot training 'results*.txt', overlaying train and val losses
     s = ['train', 'train', 'train', 'Precision', 'mAP@0.5', 'val', 'val', 'val', 'Recall', 'mAP@0.5:0.95']  # legends
@@ -465,7 +504,6 @@ def plot_results_overlay(start=0, stop=0):  # from utils.plots import *; plot_re
             ax[i].legend()
             ax[i].set_ylabel(f) if i == 0 else None  # add filename
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
-
 
 def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
     # Plot training 'results*.txt'. from utils.plots import *; plot_results(save_dir='runs/train/exp')
@@ -501,8 +539,7 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
 
     ax[1].legend()
     fig.savefig(Path(save_dir) / 'results.png', dpi=200)
-    
-    
+        
 def output_to_keypoint(output):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     targets = []
@@ -512,7 +549,6 @@ def output_to_keypoint(output):
         for index, (*box, conf, cls) in enumerate(o.detach().cpu().numpy()):
             targets.append([i, cls, *list(*xyxy2xywh(np.array(box)[None])), conf, *list(kpts.detach().cpu().numpy()[index])])
     return np.array(targets)
-
 
 def plot_skeleton_kpts(im, kpts, steps, orig_shape=None):
     #Plot the skeleton and keypointsfor coco datatset

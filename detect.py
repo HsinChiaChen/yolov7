@@ -12,7 +12,7 @@ from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.my_plots import plot_one_box, plot_one_box_remove_background, mask
+from utils.my_plots import plot_one_box, plot_one_box_no_text, mask, min_max_filtering, line_store, draw_line
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 
@@ -107,6 +107,34 @@ def detect(save_img=False):
             # Produce an image of the same size as img
             width, height = im0.shape[1], im0.shape[0]
             img_mask = np.zeros((height, width), dtype=im0.dtype)
+            # right_line = np.empty((5, 2))
+            # left_line = np.empty((5, 2))
+            right_line = []
+            left_line = []
+            for i in range(5):
+                right_line.append((0, 0))
+                left_line.append((0, 0))
+
+            gray = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)   # 轉成灰階
+            gray = cv2.medianBlur(gray, 7)                 # 模糊化，去除雜訊
+            # gray_edge = cv2.Laplacian(gray, -1, 1, 3)      # 偵測邊緣cv2.Laplacian(img, ddepth, ksize, scale)
+            # img 來源影像
+            # ddepth 影像深度，設定 -1 表示使用圖片原本影像深度
+            # ksize 運算區域大小，預設 1 ( 必須是正奇數 )
+            # scale 縮放比例常數，預設 1 ( 必須是正奇數 )
+            gray_edge = cv2.Canny(gray, 50, 50)                # 偵測邊緣cv2.Canny(img, threshold1, threshold2, apertureSize)
+            # img 來源影像
+            # threshold1 門檻值，範圍 0～255
+            # threshold2 門檻值，範圍 0～255
+            # apertureSize 計算梯度的 kernel size，預設 3
+
+            kernel = np.ones((3,3), np.uint8)
+            gray_edge = cv2.dilate(gray_edge, kernel, iterations = 1)
+            gray_edge = cv2.erode(gray_edge, kernel, iterations = 1)
+            # cv2.imshow("gray_edge",gray_edge)
+            # gray_edge = 255 - gray_edge
+            im0 = cv2.cvtColor(gray_edge, cv2.COLOR_GRAY2RGB)
+            
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
@@ -123,6 +151,17 @@ def detect(save_img=False):
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+                    if save_img or view_img:  # Add bbox to image
+                        label = f'{names[int(cls)]} {conf:.2f}'
+                        label_conf = f'{conf:.2f}'
+                        # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
+
+                        [right_line, left_line] = line_store(xyxy, im0, names[int(cls)], conf, right_line, left_line)
+
+                im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
+
+                for *xyxy, conf, cls in reversed(det):
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
@@ -131,11 +170,12 @@ def detect(save_img=False):
 
                     if save_img or view_img:  # Add bbox to image
                         label = f'{names[int(cls)]} {conf:.2f}'
-                        # plot_one_box_remove_background(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                        mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
+                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        draw_line(im0, right_line, left_line)
 
             # Print time (inference + NMS)
+            print("right_line = ",right_line)
+            print("left_line = ",left_line)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
             # Stream results
@@ -201,3 +241,5 @@ if __name__ == '__main__':
                 strip_optimizer(opt.weights)
         else:
             detect()
+    
+    cv2.waitKey(0)
