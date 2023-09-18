@@ -136,14 +136,14 @@ def line_store(x, img, label_name, label_conf, right_line, left_line):
     x_posiiton = (int(x[0])+ int(x[2]))/2
     y_posiiton = int(x[3])
     width, height = img.shape[1], img.shape[0]
-    r = 0
-    l = 0
-    if label_name == "tree" and label_conf > 0.5:
+    r = 1
+    l = 1
+    if label_name == "tree" and label_conf > 0.65:
         # print("x_posiiton = ", x_posiiton)
         # print("y_posiiton = ", y_posiiton)
         if x_posiiton > width/2 : # right
             # print("right!")
-            while right_line[r][0] > 1:
+            while right_line[r][0] < width - 1 and  r < 4:
                 r = r + 1 
             else:
                 right_line[r] = (x_posiiton, y_posiiton)
@@ -151,7 +151,7 @@ def line_store(x, img, label_name, label_conf, right_line, left_line):
                 # right_line[r][1] = y_posiiton
         else :
             # print("left!")
-            while left_line[l][0] > 1:
+            while left_line[l][0] > 1 and  l < 4:
                 l += 1
             else:
                 left_line[l] = (x_posiiton, y_posiiton)
@@ -162,7 +162,7 @@ def line_store(x, img, label_name, label_conf, right_line, left_line):
     return [right_line, left_line]
 
 def draw_line(img, right_line, left_line):
-
+    width, height = img.shape[1], img.shape[0]
     left_line = sorted(left_line, key=lambda point: point[1], reverse=True)
     right_line = sorted(right_line, key=lambda point: point[1], reverse=True)
     # print(left_line)
@@ -174,18 +174,20 @@ def draw_line(img, right_line, left_line):
 
     # 繪製直線
     for r in range(len(right_line) - 1):
-        if int(right_line[r+1][0]) != 0 and int(right_line[r+1][1]) != 0: 
+        if int(right_line[r+1][0]) != width and int(right_line[r+1][1]) != height: 
             cv2.line(img,(int(right_line[r][0]), int(right_line[r][1])), (int(right_line[r+1][0]), int(right_line[r+1][1])), (255, 0, 0), 10)
     for l in range(len(left_line) - 1):
-        if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != 0: 
+        if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != height: 
             cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
 
     # point_size = 10
-    # point_color = (0, 0, 255) # BGR
+    # point_color_right = (0, 0, 255) # BGR
+    # point_color_left = (255, 0, 0) # BGR
     # thickness = 4 # 可以为 0 、4、8
     # for i in range(5):
-    #     if int(right_line[i][0]) != 0 and int(right_line[i][1]) != 0:  
-    #         cv2.circle(img, (int(right_line[i][0]), int(right_line[i][1])), point_size, point_color, thickness)
+    #     # if int(right_line[i][0]) != 0 and int(right_line[i][1]) != 0:  
+    #         cv2.circle(img, (int(right_line[i][0]), int(right_line[i][1])), point_size, point_color_right, thickness)
+    #         cv2.circle(img, (int(left_line[i][0]), int(left_line[i][1])), point_size, point_color_left, thickness)
 
 
 def plot_one_box_PIL(box, img, color=None, label=None, line_thickness=None):

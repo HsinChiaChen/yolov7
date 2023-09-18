@@ -112,8 +112,8 @@ def detect(save_img=False):
             right_line = []
             left_line = []
             for i in range(5):
-                right_line.append((0, 0))
-                left_line.append((0, 0))
+                right_line.append((width, height))
+                left_line.append((0, height))
 
             gray = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)   # 轉成灰階
             gray = cv2.medianBlur(gray, 7)                 # 模糊化，去除雜訊
@@ -174,8 +174,8 @@ def detect(save_img=False):
                         draw_line(im0, right_line, left_line)
 
             # Print time (inference + NMS)
-            print("right_line = ",right_line)
-            print("left_line = ",left_line)
+            # print("right_line = ",right_line)
+            # print("left_line = ",left_line)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
             # Stream results
