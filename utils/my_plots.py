@@ -20,6 +20,7 @@ from scipy.signal import butter, filtfilt
 
 from utils.general import xywh2xyxy, xyxy2xywh
 from utils.metrics import fitness
+from scipy.optimize import leastsq
 
 # Settings
 matplotlib.rc('font', **{'size': 11})
@@ -101,7 +102,6 @@ def butter_lowpass_filtfilt(data, cutoff=1500, fs=50000, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     return filtfilt(b, a, data)  # forward-backward filter
 
-
 def plot_one_box(x, img, color=None, label=None, line_thickness=10):
     # Plots one bounding box on image img
     tl = line_thickness or round(0.02 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
@@ -131,7 +131,7 @@ def plot_one_box_no_text(x, img, color=None, label=None, line_thickness=10):
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
 
-def line_store(x, img, label_name, label_conf, right_line, left_line):
+def point_store(x, img, label_name, label_conf, right_line, left_line):
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     x_posiiton = (int(x[0])+ int(x[2]))/2
     y_posiiton = int(x[3])
@@ -145,7 +145,7 @@ def line_store(x, img, label_name, label_conf, right_line, left_line):
             # print("right!")
             while right_line[r][0] < width - 1 and  r < 4:
                 r = r + 1 
-            else:
+            if y_posiiton > height /2:
                 right_line[r] = (x_posiiton, y_posiiton)
                 # right_line[r][0] = x_posiiton
                 # right_line[r][1] = y_posiiton
@@ -153,13 +153,16 @@ def line_store(x, img, label_name, label_conf, right_line, left_line):
             # print("left!")
             while left_line[l][0] > 1 and  l < 4:
                 l += 1
-            else:
+            if y_posiiton > height /2:
                 left_line[l] = (x_posiiton, y_posiiton)
                 # left_line[l][0] = x_posiiton
                 # left_line[l][1] = y_posiiton
     # else:
     #     print("no detect !")
     return [right_line, left_line]
+
+def err(p, x, y): # err() 函式是一個簡單的線性函式
+    return p[0] * x + p[1] - y
 
 def draw_line(img, right_line, left_line):
     width, height = img.shape[1], img.shape[0]
@@ -171,23 +174,52 @@ def draw_line(img, right_line, left_line):
     y_right_values = [point[1] for point in right_line]
     x_left_values = [point[0] for point in left_line]
     y_left_values = [point[1] for point in left_line]
+        
+    # print("x_right_values", x_left_values) 
+    # print("y_right_values", y_left_values) 
+    # # 繪製直線
+    # for r in range(len(right_line) - 1):
+    #     if int(right_line[r+1][0]) != width and int(right_line[r+1][1]) != height: 
+    #         cv2.line(img,(int(right_line[r][0]), int(right_line[r][1])), (int(right_line[r+1][0]), int(right_line[r+1][1])), (255, 0, 0), 10)
+    # for l in range(len(left_line) - 1):
+    #     if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != height: 
+    #         cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
 
-    # 繪製直線
-    for r in range(len(right_line) - 1):
-        if int(right_line[r+1][0]) != width and int(right_line[r+1][1]) != height: 
-            cv2.line(img,(int(right_line[r][0]), int(right_line[r][1])), (int(right_line[r+1][0]), int(right_line[r+1][1])), (255, 0, 0), 10)
-    for l in range(len(left_line) - 1):
-        if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != height: 
-            cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
+    point_size = 10
+    point_color_r = (0, 0, 255) # BGR
+    point_color_b = (255, 0, 0) # BGR
+    thickness = 4 # 可以为 0 、4、8
+    for i in range(5):
+        # if int(right_line[i][0]) != 0 and int(right_line[i][1]) != 0:  
+            cv2.circle(img, (int(right_line[i][0]), int(right_line[i][1])), point_size, point_color_b, thickness)
+            cv2.circle(img, (int(left_line[i][0]), int(left_line[i][1])), point_size, point_color_b, thickness)
 
-    # point_size = 10
-    # point_color_right = (0, 0, 255) # BGR
-    # point_color_left = (255, 0, 0) # BGR
-    # thickness = 4 # 可以为 0 、4、8
-    # for i in range(5):
-    #     # if int(right_line[i][0]) != 0 and int(right_line[i][1]) != 0:  
-    #         cv2.circle(img, (int(right_line[i][0]), int(right_line[i][1])), point_size, point_color_right, thickness)
-    #         cv2.circle(img, (int(left_line[i][0]), int(left_line[i][1])), point_size, point_color_left, thickness)
+    x_right_values = np.asarray(x_right_values)
+    y_right_values = np.asarray(y_right_values)
+    x_left_values = np.asarray(x_left_values)
+    y_left_values = np.asarray(y_left_values)
+
+    p0 = [100, 20] # 表示直線的斜率和截距都為 0
+    y_far = 720
+    y_mid = (height - y_far)*1/3 + y_far
+    ret_right = leastsq(err, p0, args = (x_right_values, y_right_values))
+    ret_left = leastsq(err, p0, args = (x_left_values, y_left_values))
+    k_right, b_right = ret_right[0]
+    k_left, b_left = ret_left[0]
+
+    y = [height, y_far]
+    x_r = 1/k_right*(y - b_right)
+    x_l = 1/k_left*(y - b_left)
+
+    x_rmid = 1/k_right*(y_mid - b_right)
+    x_lmid = 1/k_left*(y_mid - b_left)
+    x_mid = (x_rmid+x_lmid)/2
+
+    cv2.line(img,(int(x_r[0]), int(y[0])), (int(x_r[1]), int(y[1])), (255, 0, 0), 10)
+    cv2.line(img,(int(x_l[0]), int(y[0])), (int(x_l[1]), int(y[1])), (255, 0, 0), 10)
+    cv2.circle(img, (int(x_mid), int(y_mid)), point_size, point_color_r, thickness)
+
+    return (int(x_mid), int(y_mid))
 
 
 def plot_one_box_PIL(box, img, color=None, label=None, line_thickness=None):

@@ -12,7 +12,7 @@ from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.my_plots import plot_one_box, plot_one_box_no_text, mask, min_max_filtering, line_store, draw_line
+from utils.my_plots import plot_one_box, plot_one_box_no_text, mask, min_max_filtering, point_store, draw_line
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 
@@ -157,7 +157,7 @@ def detect(save_img=False):
                         # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                         mask(xyxy,img_mask, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
-                        [right_line, left_line] = line_store(xyxy, im0, names[int(cls)], conf, right_line, left_line)
+                        [right_line, left_line] = point_store(xyxy, im0, names[int(cls)], conf, right_line, left_line)
 
                 im0 = cv2.add(im0, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
 
@@ -171,12 +171,12 @@ def detect(save_img=False):
                     if save_img or view_img:  # Add bbox to image
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
-                        draw_line(im0, right_line, left_line)
+                        (x_goal, y_goal) = draw_line(im0, right_line, left_line)
 
             # Print time (inference + NMS)
             # print("right_line = ",right_line)
-            # print("left_line = ",left_line)
-            print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
+            print((x_goal, y_goal))
+            # print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
             # Stream results
             if view_img:
@@ -187,7 +187,7 @@ def detect(save_img=False):
             if save_img:
                 if dataset.mode == 'image':
                     cv2.imwrite(save_path, im0)
-                    print(f" The image with the result is saved in: {save_path}")
+                    # print(f" The image with the result is saved in: {save_path}")
                 else:  # 'video' or 'stream'
                     if vid_path != save_path:  # new video
                         vid_path = save_path
