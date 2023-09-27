@@ -2,11 +2,16 @@ Training:
 python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7-0905
 python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7-0906
 
+python train.py --img 320 --batch 16 --epochs 5 --data data/my_coco.yaml --weights weights/yolov7_training.pt --name yolov7_gazebo_0927
+python train.py --workers 8 --device 0 --batch-size 8 --data data/my_coco.yaml --img 640 640 --cfg cfg/training/my_yolov7.yaml --weights weights/yolov7_training.pt --name yolov7_gazebo_0927
+
 Re-parameterization:
     On video:
-        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source farm_images
-    On image:
         python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source my_videos/farm1.mp4
+        python detect.py --weights runs/train/yolov7_gazebo_0927/weights/best.pt --source inference/gazebo_videos/gazebo_videos.mp4 
+    On image:
+        python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source farm_images
+        python detect.py --weights runs/train/yolov7_gazebo_0927/weights/best.pt --source inference/gazebo_images
 
 
 detext : best --> yolov7-090503

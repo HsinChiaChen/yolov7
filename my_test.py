@@ -169,6 +169,8 @@ def detect(save_img=False):
             # gray_edge_inv = 255 - gray_edge
             color_edge = cv2.cvtColor(gray_edge, cv2.COLOR_GRAY2RGB)
             
+            p = Path(p)  # to Path
+            save_path = str(save_dir / p.name)  # img.jpg
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -203,13 +205,43 @@ def detect(save_img=False):
             
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+            if save_img:
+                cv2.imwrite(save_path, im0)
 
+def gazebo_picture(save_img=False):
+    frames = 1
+    count = 1
+    imgPath = './images/'
+    while not rospy.is_shutdown():
+        frames += 1
+        color_img = Vision.get_color_image()
+        depth_img = Vision.get_depth_image()
+        color_img = bridge.imgmsg_to_cv2(color_img, "passthrough")
+        depth_img = bridge.imgmsg_to_cv2(depth_img, "passthrough")
+        if frames % 500 == 0:
+            imgname = 'gazebo_' + str(count).rjust(3,'0') + ".jpg"
+            newPath = imgPath + imgname
+            cv2.imwrite(newPath, color_img, [cv2.IMWRITE_JPEG_QUALITY, 100])
+            print("print! ", count)
+            count += 1
 
-def my_detect(save_img=False):
-    while(True):
-        img = Vision.get_image()
-        color_frame = bridge.imgmsg_to_cv2(img, "passthrough")
-        cv2.imshow("img", color_frame)
+        cv2.imshow('canny',color_img)
+        cv2.waitKey(1)
+
+def gazebo_video(save_img=False):
+    frames = 1
+    count = 1
+    save_dir = './inference/gazebo_videos/'
+    imgname = 'gazebo_videos.mp4'
+    newPath = save_dir + imgname
+    video_writer = cv2.VideoWriter(newPath, cv2.VideoWriter_fourcc(*'mp4v'), 120, (640, 480))
+    while not rospy.is_shutdown():
+        color_img = Vision.get_color_image()
+        color_img = bridge.imgmsg_to_cv2(color_img, "passthrough")
+        video_writer.write(color_img)
+        cv2.imshow('color_img',color_img)
+        cv2.waitKey(1)
+    video_writer.release()
 
 def goal_point(img):
     x = 0
@@ -283,6 +315,9 @@ if __name__ == '__main__':
     #     cv2.waitKey(1)
     while not rospy.is_shutdown():
         detect()
+
+    # gazebo_picture()
+    # gazebo_video()
 
     
     rate.sleep()

@@ -138,14 +138,14 @@ def point_store(x, img, label_name, label_conf, right_line, left_line):
     width, height = img.shape[1], img.shape[0]
     r = 1
     l = 1
-    if label_name == "tree" and label_conf > 0.65:
+    if label_name == "tree" and label_conf > 0.55:
         # print("x_posiiton = ", x_posiiton)
         # print("y_posiiton = ", y_posiiton)
         if x_posiiton > width/2 : # right
             # print("right!")
             while right_line[r][0] < width - 1 and  r < 4:
                 r = r + 1 
-            if y_posiiton > height /2:
+            if y_posiiton > height /3:
                 right_line[r] = (x_posiiton, y_posiiton)
                 # right_line[r][0] = x_posiiton
                 # right_line[r][1] = y_posiiton
@@ -153,7 +153,7 @@ def point_store(x, img, label_name, label_conf, right_line, left_line):
             # print("left!")
             while left_line[l][0] > 1 and  l < 4:
                 l += 1
-            if y_posiiton > height /2:
+            if y_posiiton > height /3:
                 left_line[l] = (x_posiiton, y_posiiton)
                 # left_line[l][0] = x_posiiton
                 # left_line[l][1] = y_posiiton
@@ -185,6 +185,8 @@ def draw_line(img, right_line, left_line):
     #     if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != height: 
     #         cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
 
+    
+
     point_size = 10
     point_color_r = (0, 0, 255) # BGR
     point_color_b = (255, 0, 0) # BGR
@@ -202,6 +204,8 @@ def draw_line(img, right_line, left_line):
     p0 = [100, 20] # 表示直線的斜率和截距都為 0
     y_far = 720
     y_mid = (height - y_far)*1/3 + y_far
+
+
     ret_right = leastsq(err, p0, args = (x_right_values, y_right_values))
     ret_left = leastsq(err, p0, args = (x_left_values, y_left_values))
     k_right, b_right = ret_right[0]
