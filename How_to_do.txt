@@ -13,6 +13,8 @@ Re-parameterization:
         python detect.py --weights runs/train/yolov7-090503/weights/best.pt --source farm_images
         python detect.py --weights runs/train/yolov7_gazebo_0927/weights/best.pt --source inference/gazebo_images
 
+python3 my_test.py 
+
 
 detext : best --> yolov7-090503
                   yolov7_gazebo_0927/weights/best.pt

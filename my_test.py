@@ -95,7 +95,6 @@ def detect(save_img=False):
         # if not depth_frame or not color_frame:
         #     continue
 
-
         img = np.asanyarray(color_frame)
         # img = np.asanyarray(color_frame.get_data())
         depth_image = np.asanyarray(depth_frame)
@@ -138,7 +137,7 @@ def detect(save_img=False):
 
         # Apply NMS
         pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
-        print(pred)
+        # print(pred)
         t3 = time_synchronized()
 
 
@@ -172,6 +171,13 @@ def detect(save_img=False):
             # p = Path(p)  # to Path
             # save_path = str(save_dir / p.name)  # img.jpg
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+
+            right_line = []
+            left_line = []
+            for i in range(5):
+                right_line.append((width, height))
+                left_line.append((0, height))
+
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -185,29 +191,34 @@ def detect(save_img=False):
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
                     label = f'{names[c]} {conf:.2f}'
-                    mask(xyxy,img_mask, color_edge, label=label, color=colors[int(cls)], line_thickness=3)
-                # cv2.imshow("mask", img_mask)
-                color_edge = cv2.add(color_edge, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)    
-
-                for *xyxy, conf, cls in reversed(det):
-                    c = int(cls)  # integer class
-                    label = f'{names[c]} {conf:.2f}'
                     plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
-                    # plot_one_box(xyxy, depth_colormap, label=label, color=colors[int(cls)], line_thickness=2)   
-                    plot_one_box(xyxy, color_edge, label=label, color=colors[int(cls)], line_thickness=2)   
+                    [right_line, left_line] = point_store(xyxy, im0, names[int(cls)], conf, right_line, left_line)
+                    
+                    mask(xyxy,img_mask, color_edge, label=label, color=colors[int(cls)], line_thickness=3)
 
-            # Print time (inference + NMS)
-            #print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
-            # Stream results
+                color_edge = cv2.add(color_edge, np.zeros(np.shape(im0), dtype=np.uint8), mask=img_mask)
+                (x_goal, y_goal) = draw_line(im0, right_line, left_line)
+                # print(right_line)
+                # print("right_line = ", right_line)
+                # print("left_line = ", left_line)
+                # print("-----------------------------------------------")
+                
+            else:
+                point_size = 10
+                point_color_r = (0, 0, 255) # BGR
+                thickness = 4 # 可以为 0 、4、8
+                y_far = height / 2
+                # initial
+                y_mid = (height - y_far)*1/3 + y_far
+                x_mid = width/2
+                (x_goal, y_goal) = (int(x_mid), int(y_mid))
+                cv2.circle(im0, (int(x_mid), int(y_mid)), point_size, point_color_r, thickness)
 
             # cv2.imshow("Recognition result depth",depth_colormap)
+            # print((x_goal, y_goal))
             cv2.imshow("color_img", im0)
             cv2.imshow("color_edge result", color_edge)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            # if save_img:
-            #     cv2.imwrite(save_path, im0)
+            cv2.waitKey(1)
 
 def gazebo_picture(save_img=False):
     frames = 1
@@ -276,7 +287,7 @@ if __name__ == '__main__':
     rospy.init_node('get_goal_point')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='weights/best.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default='runs/train/yolov7_gazebo_0927/weights/best.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
@@ -295,7 +306,7 @@ if __name__ == '__main__':
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--no-trace', action='store_true', help='don`t trace model')
     opt = parser.parse_args()
-    print(opt)
+    # print(opt)
     check_requirements(exclude=('pycocotools', 'thop'))
 
     listener = tf.TransformListener()
@@ -316,6 +327,7 @@ if __name__ == '__main__':
     #     cv2.waitKey(1)
     while not rospy.is_shutdown():
         detect()
+
 
     # gazebo_picture()
     # gazebo_video()

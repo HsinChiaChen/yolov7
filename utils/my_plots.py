@@ -132,6 +132,7 @@ def plot_one_box_no_text(x, img, color=None, label=None, line_thickness=10):
     cv2.rectangle(img, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
 
 def point_store(x, img, label_name, label_conf, right_line, left_line):
+    # print("in point_store")
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     x_posiiton = (int(x[0])+ int(x[2]))/2
     y_posiiton = int(x[3])
@@ -185,8 +186,6 @@ def draw_line(img, right_line, left_line):
     #     if int(left_line[l+1][0]) != 0 and int(left_line[l+1][1]) != height: 
     #         cv2.line(img,(int(left_line[l][0]), int(left_line[l][1])), (int(left_line[l+1][0]), int(left_line[l+1][1])), (255, 0, 0), 10)
 
-    
-
     point_size = 10
     point_color_r = (0, 0, 255) # BGR
     point_color_b = (255, 0, 0) # BGR
@@ -202,7 +201,7 @@ def draw_line(img, right_line, left_line):
     y_left_values = np.asarray(y_left_values)
 
     p0 = [100, 20] # 表示直線的斜率和截距都為 0
-    y_far = 720
+    y_far = height / 2
     y_mid = (height - y_far)*1/3 + y_far
 
 
@@ -218,7 +217,11 @@ def draw_line(img, right_line, left_line):
     x_rmid = 1/k_right*(y_mid - b_right)
     x_lmid = 1/k_left*(y_mid - b_left)
     x_mid = (x_rmid+x_lmid)/2
-
+    print("k_right = ",k_right)
+    print("b_right = ",b_right)
+    print("0 = ",(int(x_r[0]), int(y[0])))
+    print("1 = ",(int(x_r[1]), int(y[1])))
+    
     cv2.line(img,(int(x_r[0]), int(y[0])), (int(x_r[1]), int(y[1])), (255, 0, 0), 10)
     cv2.line(img,(int(x_l[0]), int(y[0])), (int(x_l[1]), int(y[1])), (255, 0, 0), 10)
     cv2.circle(img, (int(x_mid), int(y_mid)), point_size, point_color_r, thickness)
