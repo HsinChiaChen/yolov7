@@ -169,8 +169,8 @@ def detect(save_img=False):
             # gray_edge_inv = 255 - gray_edge
             color_edge = cv2.cvtColor(gray_edge, cv2.COLOR_GRAY2RGB)
             
-            p = Path(p)  # to Path
-            save_path = str(save_dir / p.name)  # img.jpg
+            # p = Path(p)  # to Path
+            # save_path = str(save_dir / p.name)  # img.jpg
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -199,14 +199,15 @@ def detect(save_img=False):
             # Print time (inference + NMS)
             #print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
             # Stream results
-            cv2.imshow("color_img", im0)
+
             # cv2.imshow("Recognition result depth",depth_colormap)
+            cv2.imshow("color_img", im0)
             cv2.imshow("color_edge result", color_edge)
             
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            if save_img:
-                cv2.imwrite(save_path, im0)
+            # if save_img:
+            #     cv2.imwrite(save_path, im0)
 
 def gazebo_picture(save_img=False):
     frames = 1

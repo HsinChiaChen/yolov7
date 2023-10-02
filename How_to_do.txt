@@ -15,6 +15,7 @@ Re-parameterization:
 
 
 detext : best --> yolov7-090503
+                  yolov7_gazebo_0927/weights/best.pt
     exp
     exp1
     exp2
