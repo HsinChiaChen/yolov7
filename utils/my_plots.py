@@ -202,14 +202,16 @@ def draw_line(img, right_line, left_line):
 
     p0 = [100, 20] # 表示直線的斜率和截距都為 0
     y_far = height / 2
+    y = [height, y_far]
     y_mid = (height - y_far)*1/3 + y_far
 
     # print("x_right_values = ",x_right_values)
     # print("y_right_values = ",y_right_values)
-    if x_right_values[0] ==640 and y_right_values[0] == 480:
-        k_right,b_right = np.array([100.0, -2048])
-        x_r =  680
+    if x_right_values[4] ==640 and y_right_values[4] == 480:
+        # k_right,b_right = np.array([100.0, -2048])
+        x_r =  np.array([680, 680])
         x_rmid = 680
+        print(x_right_values)
 
     else:
         ret_right = leastsq(err, p0, args = (x_right_values, y_right_values))
@@ -217,25 +219,26 @@ def draw_line(img, right_line, left_line):
         x_r = 1/k_right*(y - b_right)
         x_rmid = 1/k_right*(y_mid - b_right)
 
-    print("k_right = ",k_right)
-    print("b_right = ",b_right)
+    # print("k_right = ",k_right)
+    # print("b_right = ",b_right)
 
     # ret_right = leastsq(err, p0, args = (x_right_values, y_right_values))
     ret_left = leastsq(err, p0, args = (x_left_values, y_left_values))
     # k_right, b_right = ret_right[0]
     k_left, b_left = ret_left[0]
 
-    y = [height, y_far]
+    
     # x_r = 1/k_right*(y - b_right)
     x_l = 1/k_left*(y - b_left)
 
     # x_rmid = 1/k_right*(y_mid - b_right)
     x_lmid = 1/k_left*(y_mid - b_left)
     x_mid = (x_rmid+x_lmid)/2
-    print("ret_left = ",ret_left)
-    print("b_left = ",type(b_left))
-    # print("0 = ",(int(x_r[0]), int(y[0])))
-    # print("1 = ",(int(x_r[1]), int(y[1])))
+
+
+    print(int(x_r[0]), int(y[0]))
+    print(int(x_r[1]), int(y[1]))
+    print("---------------------------------")
     
     cv2.line(img,(int(x_r[0]), int(y[0])), (int(x_r[1]), int(y[1])), (255, 0, 0), 10)
     cv2.line(img,(int(x_l[0]), int(y[0])), (int(x_l[1]), int(y[1])), (255, 0, 0), 10)
