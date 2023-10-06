@@ -235,10 +235,9 @@ def draw_line(img, right_line, left_line):
     x_lmid = 1/k_left*(y_mid - b_left)
     x_mid = (x_rmid+x_lmid)/2
 
-
-    print(int(x_r[0]), int(y[0]))
-    print(int(x_r[1]), int(y[1]))
-    print("---------------------------------")
+    # print(int(x_r[0]), int(y[0]))
+    # print(int(x_r[1]), int(y[1]))
+    # print("---------------------------------")
     
     cv2.line(img,(int(x_r[0]), int(y[0])), (int(x_r[1]), int(y[1])), (255, 0, 0), 10)
     cv2.line(img,(int(x_l[0]), int(y[0])), (int(x_l[1]), int(y[1])), (255, 0, 0), 10)
