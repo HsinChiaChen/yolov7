@@ -142,7 +142,7 @@ def point_store(x, img, label_name, label_conf, right_line, left_line):
     if label_name == "tree" and label_conf > 0.55:
         # print("x_posiiton = ", x_posiiton)
         # print("y_posiiton = ", y_posiiton)
-        if x_posiiton > width/2 : # right
+        if x_posiiton > width*1/2 : # right
             # print("right!")
             while right_line[r][0] < width - 1 and  r < 4:
                 r = r + 1 
@@ -150,7 +150,7 @@ def point_store(x, img, label_name, label_conf, right_line, left_line):
                 right_line[r] = (x_posiiton, y_posiiton)
                 # right_line[r][0] = x_posiiton
                 # right_line[r][1] = y_posiiton
-        else :
+        if x_posiiton < width*1/2 : # right
             # print("left!")
             while left_line[l][0] > 1 and  l < 4:
                 l += 1

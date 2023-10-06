@@ -75,7 +75,8 @@ def detect(save_img=False):
     # align = rs.align(align_to)
 
     prev_frame_time = 0
-    while(True):
+    # while(True):
+    while not rospy.is_shutdown():
         # t0 = time.time()
         new_frame_time = time.time()
         fps = 1/(new_frame_time-prev_frame_time)
@@ -325,12 +326,13 @@ if __name__ == '__main__':
     #     [goal_x,goal_y,goal_z] = goal_point(color_img)
     #     print('(x, y, z) = (',round(trans[0],6)+2, ' , ', round(trans[1],6)+2, ' , ', round(trans[2],6) ,')')
     #     cv2.waitKey(1)
-    while not rospy.is_shutdown():
-        detect()
+    # with torch.no_grad():
+    #     detect()
+    detect()
 
 
     # gazebo_picture()
     # gazebo_video()
 
     
-    rate.sleep()
+    cv2.waitKey(0)
