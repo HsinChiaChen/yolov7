@@ -2,6 +2,7 @@
 /labelImg
 /runs
 /inference
+/before_label
 
 # Repo-specific GitIgnore ----------------------------------------------------------------------------------------------
 *.jpg
