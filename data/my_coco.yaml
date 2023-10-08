@@ -5,8 +5,8 @@
 
 # train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 # path: ../
-train: /home/hcchen/yolov7/images  # train images
-val: /home/hcchen/yolov7/images  # val images
+train: /home/hcchen/yolo/yolov7/images  # train images
+val: /home/hcchen/yolo/yolov7/images  # val images
 # test: ./coco/test-dev2017.txt  # 20288 of 40670 images, submit to https://competitions.codalab.org/competitions/20794
 
 # number of classes

@@ -20,8 +20,8 @@ def video2imgs(videoPath, imgPath):
             print("Process finished!")
             break
         else:
-            if frames % 30 == 0:         # 每隔30幀抽一張
-                imgname = 'gazebo_' + str(count).rjust(3,'0') + ".jpg"
+            if frames % 10 == 0:         # 每隔30幀抽一張
+                imgname = 'indoor_' + str(count).rjust(3,'0') + ".jpg"
                 newPath = imgPath + imgname
                 print(imgname)
                 cv2.imwrite(newPath, frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
@@ -30,5 +30,5 @@ def video2imgs(videoPath, imgPath):
         frames += 1
     cap.release()
     
-video2imgs('/home/hcchen/yolov7/inference/gazebo_videos/gazebo_videos.mp4','./inference/gazebo_images/')
+video2imgs('/home/hcchen/yolo/yolov7/inference/indoor_videos/indoor_videos.mp4','./inference/indoor_images/')
 
